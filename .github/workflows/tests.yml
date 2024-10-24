@@ -23,5 +23,8 @@ jobs:
       - name: Install
         run: pip install .[test]
 
+      - name: Debug
+        run: pip freeze
+
       - name: Run tests
         run: pytest
