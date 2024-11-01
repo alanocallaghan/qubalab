@@ -24,7 +24,7 @@ sample_metadata = ImageMetadata(
 large_metadata = ImageMetadata(
     "/path/to/img.tiff",
     "Image name",
-    (ImageShape(1000, 500),),
+    (ImageShape(500, 250),),
     PixelCalibration(
         PixelLength.create_microns(2.5),
         PixelLength.create_microns(2.5)
@@ -397,16 +397,19 @@ def test_read_polygon_in_single_channel_image_without_label_map_with_downsample(
 
 def test_label_can_hold_many_values():
     downsample = 1
-    max_objects = 500
-    random.seed(42)
+    max_objects = 1000
+    random.seed(1)
     def rands():
+        x = random.randint(0, int(large_metadata.shape.x / downsample))
+        y = random.randint(0, int(large_metadata.shape.x / downsample))
         return (
-            random.randint(0, int(sample_metadata.shape.x / downsample)),
-            random.randint(0, int(sample_metadata.shape.y / downsample))
+            (x, y),
+            (x + 1, y),
+            (x + 1, y + 1),
+            (x, y + 1)
         )
     
-    coords = [(rands(), rands(), rands(), rands()) for i in range(max_objects)]
-    coords = list(set(coords))
+    coords = [rands() for i in range(max_objects)]
 
     n_objects = len(coords)
     features = [ImageFeature(geojson.Polygon([coords[i]]), Classification("Some classification")) for i in range(n_objects)]
@@ -414,7 +417,7 @@ def test_label_can_hold_many_values():
 
     image = labeled_server.read_region(1, Region2D(0, 0, labeled_server.metadata.width, labeled_server.metadata.height))
 
-    assert np.max(image) > 255
+    assert np.max(image) == max_objects
 
 
 def test_single_channel_labeled_image_with_region_request():
